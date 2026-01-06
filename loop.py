@@ -4,7 +4,6 @@ import qrcode
 from datetime import datetime
 import json
 import cv2
-from pyzbar.pyzbar import decode
 import io
 import pandas as pd
 import random
@@ -161,7 +160,7 @@ def register_page():
 
 
 # -----------------------------
-# SCAN PAGE
+# SCAN PAGE (OpenCV QR Decoder)
 # -----------------------------
 def scan_page():
     col1, col2 = st.columns([1, 6])
@@ -176,13 +175,15 @@ def scan_page():
         return
 
     img = cv2.imdecode(np.frombuffer(uploaded.getvalue(), np.uint8), cv2.IMREAD_COLOR)
-    decoded = decode(img)
 
-    if not decoded:
+    detector = cv2.QRCodeDetector()
+    data, bbox, _ = detector.detectAndDecode(img)
+
+    if not data:
         st.error("No QR code detected.")
         return
 
-    qr_data = json.loads(decoded[0].data.decode())
+    qr_data = json.loads(data)
     batch_id = qr_data.get("batch_id")
 
     conn = init_db()
